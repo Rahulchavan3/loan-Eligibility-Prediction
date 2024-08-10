@@ -1,0 +1,107 @@
+from flask import Flask, request, render_template
+from flask_pymongo import PyMongo
+from gridfs import GridFS
+from pymongo import MongoClient
+from werkzeug.utils import secure_filename
+import pickle
+
+app = Flask(__name__)
+app.config["MONGO_URI"] = "mongodb+srv://rahulchavan0010:rahulchavan0010@cluster0.6qbtf07.mongodb.net/loan_prediction?retryWrites=true&w=majority&appName=Cluster0"
+mongo = PyMongo(app)
+
+print("Connected to MongoDB successfully" if mongo.cx else "Failed to connect to MongoDB")
+model = pickle.load(open('ensemble_model.pkl', 'rb'))
+
+client = MongoClient(app.config['MONGO_URI'])
+db = client.loan_prediction
+fs = GridFS(db)
+
+@app.route('/')
+def home():
+    return render_template("index.html")
+
+@app.route('/predict', methods=['GET', 'POST'])
+def predict():
+    if request.method == 'POST':
+        # Extracting form data
+        name = request.form['Name']
+        phone_no = request.form['Mobile_Number']
+        income = int(request.form['Income'])
+        age = int(request.form['Age'])
+        experience = int(request.form['Experience'])
+        profession = request.form['profession']
+        state = request.form['state']
+        current_job_yrs = int(request.form['Current_Job_Year'])
+        current_house_yrs = int(request.form['Current_House_Year'])
+        gender = request.form['gender']
+        married = request.form['married']
+        dependents = int(request.form['dependents'])
+        LoanAmount = int(request.form['LoanAmount'])
+        Loan_Amount_Term = int(request.form['Loan_Amount_Term'])
+
+        # Converting gender and married to binary values
+        gender = 1 if gender == 'Male' else 0
+        married = 1 if married == 'Yes' else 0
+
+        # Mapping profession and state to numerical values
+        profession_map = {'Engineering': 1, 'IT Software': 2, 'Government': 3, 'Education': 4, 'Finance': 5, 'Aviation': 6, 'Design': 7, 'Mediacal': 8, 'Art': 9, 'Others': 10, 'Hospitality': 11, 'Entertainment': 12, 'Administration': 13, 'Finance/Accounting': 14, 'Science/Research': 15}
+        profession = profession_map.get(profession, 0)
+
+        state_map = {'South/Central India': 1, 'West India': 2, 'Telugu States': 3, 'North India': 4, 'Unknown': 5, 'Northwest India': 6, 'Northeast India': 7, 'Central India': 8, 'Other': 9}
+        state = state_map.get(state, 0)
+
+        # Extracting file uploads
+        aadhar_file = request.files['aadhar']
+        pan_file = request.files['pan']
+        salary_file = request.files['salary']
+
+        # Saving files to GridFS
+        aadhar_id = fs.put(aadhar_file, filename=secure_filename(aadhar_file.filename))
+        pan_id = fs.put(pan_file, filename=secure_filename(pan_file.filename))
+        salary_id = fs.put(salary_file, filename=secure_filename(salary_file.filename))
+
+        # Saving form data and file IDs to MongoDB
+        
+
+        # Predicting loan status
+        prediction = model.predict([[income, age, experience, profession, state, current_job_yrs, current_house_yrs, gender, married, dependents, LoanAmount, Loan_Amount_Term]])
+        print(prediction)
+
+        if prediction == 0:
+            prediction_text = "No"
+        else:
+            prediction_text = "Yes"
+
+        mongo.db.inventory.insert_one({
+            'name': name,
+            'phone_no': phone_no,
+            'income': income,
+            'age': age,
+            'experience': experience,
+            'profession': profession,
+            'state': state,
+            'current_job_yrs': current_job_yrs,
+            'current_house_yrs': current_house_yrs,
+            'gender': gender,
+            'married': married,
+            'dependents': dependents,
+            'LoanAmount': LoanAmount,
+            'Loan_Amount_Term': Loan_Amount_Term,
+            'prediction' : prediction,
+            'aadhar_id': str(aadhar_id),
+            'pan_id': str(pan_id),
+            'salary_id': str(salary_id)
+        })
+
+        return render_template("prediction.html", prediction_text="Loan status is {}".format(prediction_text))
+
+    else:
+        return render_template("prediction.html")
+
+@app.route('/admin')
+def admin():
+    data = mongo.db.inventory.find({})
+    return render_template("dashboard.html", data=data)
+
+if __name__ == "__main__":
+    app.run(debug=True, port=8000)

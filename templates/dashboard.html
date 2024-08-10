@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        /* Add your CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        .object-list {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        li:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="object-list">
+        <h1>Loan Applications</h1>
+    <ul>
+        {% for item in data %}
+            <li>income - {{item.income}} <br>
+                name - {{item.name}} <br>
+                phone_no - {{item.phone_no}} <br>
+                email - {{item.email}} <br>
+                age - {{item.age}} <br>
+                Experience - {{item.experience}} <br>
+                profession - {{item.profession}} <br>
+                state - {{item.state}} <br>
+                current_job_years - {{item.current_job_yrs}} <br>
+                current_house_years - {{item.current_house_yrs}} <br>
+                gender - {{item.gender}} <br>
+                married - {{item.married}} <br>
+                dependents - {{item.dependents}} <br>
+                Loan Amount - {{item.LoanAmount}}  <br>
+                loan Term - {{item.Loan_Amount_Term}} <br>
+                CIBIL Score - {{item.credit_history}} <br>
+                loan reason  - {{item.reasons}} <br>
+                model output - {{item.prediction}} <br>
+
+
+
+                
+                
+
+                <p>
+                    Aadhar:
+                    <a class="document-link" href="/view_document/{{ item.aadhar_id }}" target="_blank">View Document</a>
+                </p>
+                
+                
+                <p>
+                    PAN:
+                    <a class="document-link" href="/view_document/{{ item.pan_id }}" target="_blank">View Document</a>
+                </p>
+                
+                
+                <p>
+                    Salary Slip:
+                    <a class="document-link" href="/view_document/{{ item.salary_id }}" target="_blank">View Document</a>
+                </p>
+                
+
+                <form action="/approve_loan/{{ item._id }}" method="POST">
+                    <button type="submit">Approve</button>
+                </form>
+            <br>
+                <form action="/reject_loan/{{ item._id }}" method="POST">
+                    <button type="submit">Reject</button>
+                </form>
+
+                
+                 <!-- View Document Buttons
+                 <div>
+                    <button onclick="viewDocument('{{ item.aadhar_id }}')">View Aadhar</button>
+                    <button onclick="viewDocument('{{ item.pan_id }}')">View PAN</button>
+                    <button onclick="viewDocument('{{ item.salary_id }}')">View Salary Slip</button>
+                </div> -->
+
+            </li>
+        {% endfor %}
+    </ul>
+    </div>
+
+    <!-- <script>
+        function viewDocument(fileId) {
+            window.open('/view_document/' + fileId, '_blank');
+        }
+    </script> -->
+    <!-- <script>
+        // JavaScript code
+        document.addEventListener("DOMContentLoaded", function () {
+            // Sample list of objects
+            const objects = [
+                { name: "Object 1", description: "Description for Object 1" },
+                { name: "Object 2", description: "Description for Object 2" },
+                { name: "Object 3", description: "Description for Object 3" },
+            ];
+
+            // Get the UL element where we'll add list items
+            const objectContainer = document.getElementById("object-container");
+
+            // Function to handle clicking an object
+            function handleObjectClick(name) {
+                alert(`You clicked on ${name}`);
+                // You can replace the alert with your own logic to handle the click event.
+            }
+
+            // Loop through the list of objects and create a list item for each
+            objects.forEach((object, index) => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <h2>${object.name}</h2>
+                    <p>${object.description}</p>
+                `;
+
+                // Add a click event listener to the list item
+                li.addEventListener("click", () => {
+                    handleObjectClick(object.name);
+                });
+
+                objectContainer.appendChild(li);
+            });
+        });
+    </script> -->
+</body>
+</html>
